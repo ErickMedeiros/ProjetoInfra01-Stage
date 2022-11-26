@@ -1,3 +1,5 @@
+#teste02
+
 variable "locat" {
   default = "eastus"
 }
