@@ -1,6 +1,6 @@
 #Arquivo de provisionamento de recursos no azure ---
 #Estudo de Terraform - Erick Medeiros ---
-#Projeto Staging 01 --- Teste 02 ----
+#Projeto Staging 01 
 
 # Configure the Azure provider
 terraform {
