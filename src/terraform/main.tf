@@ -26,7 +26,7 @@ terraform {
     resource_group_name  = "RG-STO-BK"
     storage_account_name = "stobackupterraform"
     container_name       = "tfstate"
-    key                  = "azure/stg/staging.terraform.tfstate"
+    key                  = "staging.terraform.tfstate"
     #use_azuread_auth     = true
     #subscription_id      = "2225e25f-3762-422a-85f7-d74547dc8640"
     #tenant_id            = "ab29f776-7618-47c6-a0f7-94c8cca60f98"
