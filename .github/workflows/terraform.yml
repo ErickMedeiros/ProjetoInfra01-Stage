@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: 'Terraform'
+name: 'terraform'
 
 # Controls when the workflow will run
 on:
@@ -20,7 +20,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   terraform:
-    name: 'Terraform'
+    name: 'terraform'
     env:
       ARM_CLIENT_ID: ${{secrets.AZURE_AD_CLIENT_ID}}
       ARM_CLIENT_SECRET: ${{secrets.AZURE_AD_CLIENT_SECRET}}
