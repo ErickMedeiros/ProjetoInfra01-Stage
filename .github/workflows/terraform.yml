@@ -1,59 +1,93 @@
+# This is a basic workflow to help you get started with Actions
+
 name: 'Terraform'
+
+# Controls when the workflow will run
 on:
-  workflow_dispatch:
-    inputs:
-      TFAction:
-        description: "Terraform Action- Apply or Destroy"     
-        required: true
-        default: "apply"
-permissions:
-  contents: read
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches:
+      - master
+       
+    pull_request:
+    workflow_dispatch:
+    
+  
+
+  # Allows you to run this workflow manually from the Actions tab
+  #workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   terraform:
     name: 'Terraform'
-    runs-on: ubuntu-latest
-    environment: dev
     env:
-      ARM_CLIENT_ID: ${{ secrets.AZURE_AD_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.AZURE_AD_CLIENT_SECRET }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.AZURE_AD_TENANT_ID }}
-      TerraformBackendStorageAccount: "stobackupterraform"
-      TerraformBackendResourceGroup: "RG-STO-BK"
-      TerraformBackendStorageContainer: "tfstate"           
-      
+      ARM_CLIENT_ID: ${{secrets.AZURE_AD_CLIENT_ID}}
+      ARM_CLIENT_SECRET: ${{secrets.AZURE_AD_CLIENT_SECRET}}
+      ARM_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+      ARM_TENANT_ID: ${{secrets.AZURE_AD_TENANT_ID}}
+      ROOT_PATH: '${{ github.workspace }}/'
+
+
+jobs:
+  terraform_plan:
+    name: 'Terraform plan'
+    runs-on: ubuntu-latest
+   
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
       run:
         shell: bash
-steps:
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v3
-      
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v1
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: terraform init
-      backend-config=storage_account_name=$TerraformBackendStorageAccount 
-      backend-config=container_name=$TerraformBackendStorageContainer 
-      backend-config=key=dev.tfstate 
-      backend-config=resource_group_name=$TerraformBackendResourceGroup 
-      backend-config=subscription_id="$ARM_SUBSCRIPTION_ID" 
-      backend-config=tenant_id="$ARM_TENANT_ID" 
-      backend-config=client_id="$ARM_CLIENT_ID" 
-      backend-config=client_secret="$ARM_CLIENT_SECRET"
-       name: Terraform Plan
-      run: terraform plan 
-          out=plan.tfplan 
-          input=false 
-          var="location=eastus" 
-          var="resource_group_name=tfdemo" 
-          var="storage_account_name=tfdemoabcxxyg" 
-          var="storage_account_tier=Standard" 
-          var="virtual_network_name=myvnet"
-      
-      - name: Terraform Apply
-      if: ${{ inputs.TFAction == 'apply'}}  
-      run: terraform apply -input=false -auto-approve plan.tfplan
-      - name: Terraform Destroy
-      if: ${{ inputs.TFAction == 'destroy' }} 
-      run: terraform destroy -input=false -auto-approve
+      working-directory: ${{env.ROOT_PATH}}
+   
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: ${{env.ROOT_PATH}}
+
+  terraform_apply:
+    name: 'Terraform apply'
+    runs-on: ubuntu-latest
+    needs: [terraform_plan]
+    environment: dev
+    
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ${{env.ROOT_PATH}}
+   
+    # Generates an execution plan for Terraform
+    - name: Terraform apply
+      run: terraform apply --auto-approve
+      working-directory: ${{env.ROOT_PATH}}
