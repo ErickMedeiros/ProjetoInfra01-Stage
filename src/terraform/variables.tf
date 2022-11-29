@@ -1,4 +1,4 @@
-#arquivo de variaveis
+#variaveis
 
 variable "locat" {
   default = "eastus"
