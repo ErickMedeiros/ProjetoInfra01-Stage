@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: 'terraform'
+name: 'Terraform'
 
 # Controls when the workflow will run
 on:
@@ -10,8 +10,6 @@ on:
       - master
        
     pull_request:
-    workflow_dispatch:
-    
   
 
   # Allows you to run this workflow manually from the Actions tab
@@ -20,74 +18,62 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   terraform:
-    name: 'terraform'
+    name: 'Terraform'
     env:
       ARM_CLIENT_ID: ${{secrets.AZURE_AD_CLIENT_ID}}
       ARM_CLIENT_SECRET: ${{secrets.AZURE_AD_CLIENT_SECRET}}
       ARM_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID}}
       ARM_TENANT_ID: ${{secrets.AZURE_AD_TENANT_ID}}
-      ROOT_PATH: '${{ github.workspace }}/src/workflows'
 
-
-jobs:
-  terraform:
-    name: 'Terraform plan'
+  # This workflow contains a single job called "build"
+  #build:
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-   
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
-      run: terraform init
-      working-directory: ${{env.ROOT_PATH}}
-   
-    # Generates an execution plan for Terraform
-    - name: Terraform Plan
-      run: terraform plan
-      working-directory: ${{env.ROOT_PATH}}
-
-  terraform_apply:
-    name: 'Terraform apply'
-    runs-on: ubuntu-latest
-    needs: [terraform_plan]
     environment: dev
-    
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+
     defaults:
       run:
         shell: bash
 
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
     # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
+    - name: 'Checkout'
       uses: actions/checkout@v2
-
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
-      run: terraform init
-      working-directory: ${{env.ROOT_PATH}}
-   
-    # Generates an execution plan for Terraform
-    - name: Terraform apply
-      run: terraform apply --auto-approve
-      working-directory: ${{env.ROOT_PATH}}
+    - name: 'Terraform Format'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.14.9
+        tf_actions_subcommand: 'fmt'
+        tf_actions_working_dir: "terraform"
+
+    - name: 'Terraform Init'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.14.9
+        tf_actions_subcommand: 'init'
+        tf_actions_working_dir: "terraform"
+
+    - name: 'Terraform Validate'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.14.9
+        tf_actions_subcommand: 'validate'
+        tf_actions_working_dir: "terraform"
+
+    - name: 'Terraform Plan'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.14.9
+        tf_actions_subcommand: 'plan'
+        tf_actions_working_dir: "terraform"
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main'
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.14.9
+        tf_actions_subcommand: 'apply'
+        tf_actions_working_dir: "terraform"
