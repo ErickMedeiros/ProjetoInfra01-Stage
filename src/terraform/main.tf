@@ -1,7 +1,7 @@
 #Arquivo de provisionamento de recursos no azure ---
 #Estudo de Terraform - Erick Medeiros ---
 #Projeto Stagings
- 
+
 # Configure the Azure provider
 terraform {
   required_providers {
@@ -16,7 +16,6 @@ terraform {
 
 provider "azurerm" {
   features {}
-  
 
 }
 
