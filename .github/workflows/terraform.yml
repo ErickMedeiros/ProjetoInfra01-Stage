@@ -30,7 +30,7 @@ jobs:
 
 
 jobs:
-  terraform_plan:
+  terraform:
     name: 'Terraform plan'
     runs-on: ubuntu-latest
    
